@@ -1,312 +1,523 @@
 # Demo Script: MCP Context Forge Live Demonstration
 
-**Duration:** 5 minutes
-**Prerequisites:** MCP Context Forge running with sample tools registered
+**Duration:** 10-15 minutes (interactive, self-paced)
+**Script:** `demo.sh` (automated terminal demonstration)
+**Prerequisites:** MCP Context Forge server running
 
 ---
 
-## Pre-Demo Setup (Before Presentation)
+## Overview
 
-### 1. Start MCP Context Forge
+The `demo.sh` script provides a complete, interactive terminal demonstration with:
+- ASCII architecture diagrams
+- Full curl commands displayed (not truncated)
+- Storytelling narratives explaining each concept
+- Step-by-step progression with "Press Enter to continue"
+
+This document explains what the presenter should say and highlight at each stage.
+
+---
+
+## Pre-Demo Setup
+
+### 1. Start MCP Context Forge Server
+
+Open **Terminal 1** and start the server:
 
 ```bash
-# Option A: PyPI installation
-pip install mcp-contextforge-gateway
-mcpgateway serve
+# Option A: From source (recommended for demo)
+make dev
 
-# Option B: Docker
+# Option B: PyPI installation
+pip install mcp-contextforge-gateway
+mcpgateway serve --port 4444
+
+# Option C: Docker
 docker run -p 4444:4444 \
   -e MCPGATEWAY_UI_ENABLED=true \
-  -e AUTH_REQUIRED=false \
   ghcr.io/ibm/mcp-context-forge:latest
-
-# Option C: From source
-make dev
 ```
 
-### 2. Register Sample Tools
+### 2. Verify Server is Running
 
 ```bash
-# Set base URL
-export MCPGATEWAY_URL="http://localhost:4444"
-
-# Register a sample search tool
-curl -X POST "$MCPGATEWAY_URL/tools" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "search_database",
-    "description": "Search the enterprise database for records matching a query",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "query": {"type": "string", "description": "Search query"},
-        "limit": {"type": "integer", "description": "Maximum results", "default": 10}
-      },
-      "required": ["query"]
-    }
-  }'
-
-# Register a notification tool
-curl -X POST "$MCPGATEWAY_URL/tools" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "send_notification",
-    "description": "Send a notification to specified recipients",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "recipients": {"type": "array", "items": {"type": "string"}},
-        "message": {"type": "string"},
-        "priority": {"type": "string", "enum": ["low", "normal", "high"]}
-      },
-      "required": ["recipients", "message"]
-    }
-  }'
-
-# Register a document tool
-curl -X POST "$MCPGATEWAY_URL/tools" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "generate_report",
-    "description": "Generate a formatted report from provided data",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "title": {"type": "string"},
-        "data": {"type": "object"},
-        "format": {"type": "string", "enum": ["pdf", "html", "markdown"]}
-      },
-      "required": ["title", "data"]
-    }
-  }'
+curl http://localhost:4444/health
+# Should return: {"status":"healthy"}
 ```
 
-### 3. Browser Tabs Prepared
+### 3. Run the Demo Script
 
-- **Tab 1:** Admin UI at `http://localhost:4444/ui`
+Open **Terminal 2** (full screen recommended) and run:
+
+```bash
+bash demo.sh
+```
+
+### 4. Browser Tabs (Optional)
+
+Keep these open to show alongside the terminal:
+- **Tab 1:** Admin UI at `http://localhost:4444/admin`
 - **Tab 2:** API docs at `http://localhost:4444/docs`
-- **Tab 3:** Terminal for curl commands
 
 ---
 
-## Demo Flow (5 Minutes)
+## Demo Flow
 
-### Part 1: Admin UI Overview (1 minute)
-
-**What to Show:**
-- Main dashboard with tool/resource/prompt counts
-- Navigation menu
-
-**Script:**
-
-> Let me show you the MCP Context Forge Admin UI.
->
-> [Navigate to localhost:4444/ui]
->
-> This is our central dashboard. You can see at a glance how many tools, resources, and prompts are registered in the system.
->
-> The navigation on the left provides access to each entity type—servers, tools, resources, prompts—as well as gateways for federation and logs for troubleshooting.
->
-> Let's look at the tools we have registered.
-
-**Click:** Tools menu item
-
-> Here we see all registered tools. Each tool has a name, description, and current status—active or inactive.
->
-> Notice the actions column—we can view details, edit, or toggle the active state for any tool.
+The demo.sh script has 5 main parts. Below is the presenter guide for each section.
 
 ---
 
-### Part 2: Tool Discovery via API (2 minutes)
+## Welcome Screen: MCP Architecture
 
-**What to Show:**
-- API endpoint for listing tools
-- JSON response structure
+**What Appears:**
 
-**Script:**
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    MODEL CONTEXT PROTOCOL (MCP)                         │
+│                         Architecture Overview                           │
+└─────────────────────────────────────────────────────────────────────────┘
 
-> Now let's see how an AI client would discover these tools.
->
-> [Switch to terminal]
->
-> When an AI client connects to Context Forge, it uses the standard MCP protocol to list available tools. Let me show you the HTTP equivalent.
-
-**Execute:**
-```bash
-curl -s http://localhost:4444/tools | jq '.'
+┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
+│   AI CLIENT      │         │   AI CLIENT      │         │   AI CLIENT      │
+│  (Claude, GPT,   │         │  (watsonx,       │         │  (Custom         │
+│   Copilot)       │         │   Granite)       │         │   Agents)        │
+└────────┬─────────┘         └────────┬─────────┘         └────────┬─────────┘
+         │                            │                            │
+         │         MCP Protocol (JSON-RPC 2.0)                     │
+         │         SSE / WebSocket / HTTP                          │
+         └────────────────────┬───────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      MCP CONTEXT FORGE                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │  Registry   │  │   Gateway   │  │  Auth &     │  │  Metrics &  │    │
+│  │  (Tools,    │  │   Layer     │  │  RBAC       │  │  Logging    │    │
+│  │  Resources) │  │             │  │             │  │             │    │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│   MCP Server     │  │   REST API       │  │   Legacy         │
+│   (Native)       │  │   (Virtualized)  │  │   System         │
+└──────────────────┘  └──────────────────┘  └──────────────────┘
 ```
 
-> This returns all active tools in MCP-compliant format. Each tool includes its name, description, and input schema—everything an AI needs to understand how to use it.
->
-> Notice the inputSchema for each tool. This follows JSON Schema format, so the AI knows exactly what parameters are required and their types.
+**Presenter Script:**
 
-**Execute:**
-```bash
-curl -s http://localhost:4444/tools | jq '.[] | {name, description}'
-```
-
-> Let me simplify that view. We have three tools: search_database, send_notification, and generate_report.
+> "Welcome to the MCP Context Forge demonstration. Let me start by explaining the architecture.
 >
-> An AI agent can discover these tools, understand their purpose from the description, and invoke them with properly structured parameters.
+> At the top, we have AI clients - this could be Claude, GPT, watsonx Granite, or any custom AI agent you build.
+>
+> These clients communicate using the Model Context Protocol, or MCP - an open standard using JSON-RPC 2.0 over various transports like SSE, WebSocket, or HTTP.
+>
+> In the middle is MCP Context Forge - our central control plane. It provides:
+> - A **Registry** for tools, resources, and prompts
+> - A **Gateway layer** for routing requests
+> - **Authentication and RBAC** for security
+> - **Metrics and logging** for observability
+>
+> At the bottom are the actual backend services - these can be native MCP servers, REST APIs that we virtualize, or even legacy systems.
+>
+> The key insight is that AI clients only need to know about Context Forge. They don't need to know about individual services."
+
+**Press Enter to continue**
 
 ---
 
-### Part 3: Tool Governance - Disable a Tool (1.5 minutes)
+## Part 1: Tool Registration
 
-**What to Show:**
-- Disabling a tool in the UI
-- Immediate effect on API response
+**What the Script Explains:**
 
-**Script:**
+The script will explain that TOOLS are executable functions with:
+- `name` - Unique identifier
+- `description` - Human-readable explanation (helps AI understand purpose)
+- `inputSchema` - JSON Schema defining parameters
 
-> Now here's where governance becomes powerful.
->
-> Imagine we discover an issue with the send_notification tool—maybe there's a bug, or we need to do maintenance.
->
-> [Switch to Admin UI - Tools page]
->
-> I'll disable this tool by clicking the toggle.
+**Tool 1: search_database**
 
-**Click:** Toggle for send_notification tool to inactive
+The full curl command is displayed:
 
-> Notice it's now marked as inactive. This change is immediate—no deployment, no restart, no code changes.
->
-> Let's verify from the API.
-
-**Execute:**
 ```bash
-curl -s http://localhost:4444/tools | jq '.[] | {name, description}'
-```
-
-> See? The send_notification tool no longer appears. Any AI client that queries for available tools will not see it.
->
-> This is centralized governance in action. One toggle in the admin UI, and the tool is hidden from all AI systems across your organization.
-
----
-
-### Part 4: Re-enable and Verify (30 seconds)
-
-**Script:**
-
-> Of course, once the issue is resolved, we can re-enable just as easily.
-
-**Click:** Toggle for send_notification tool back to active
-
-> And if we query again...
-
-**Execute:**
-```bash
-curl -s http://localhost:4444/tools | jq '.[] | .name'
-```
-
-> All three tools are available again.
->
-> This entire workflow—discover, disable, re-enable—happened without touching any AI client code or configuration. That's the power of centralized tool governance.
-
-**[Return to presentation slides]**
-
----
-
-## Extended Demo Options (If Time Permits)
-
-### Federation Demo (Additional 2-3 minutes)
-
-**Setup Required:**
-- Second Context Forge instance on port 4445
-- Different tools registered on second instance
-
-**Commands:**
-```bash
-# Register second instance as a gateway
-curl -X POST "http://localhost:4444/gateways" \
+curl -X POST "http://localhost:4444/tools" \
+  -u admin:changeme \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "regional-gateway",
-    "url": "http://localhost:4445/sse",
-    "transport": "sse"
-  }'
-
-# Refresh to pull tools from federated gateway
-curl -X POST "http://localhost:4444/gateways/{gateway_id}/refresh"
-
-# Show aggregated tools
-curl -s http://localhost:4444/tools | jq '.[] | .name'
-```
-
-**Script:**
-
-> Let me show federation. I have a second Context Forge instance running that represents a regional gateway with its own tools.
->
-> I'll register it as a peer gateway...
->
-> Now when I list tools, I see tools from both gateways—the local ones and the federated ones—all discoverable through a single endpoint.
-
----
-
-### Tool Invocation Demo (Additional 2 minutes)
-
-**Commands:**
-```bash
-# Invoke a tool
-curl -X POST "http://localhost:4444/tools/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/call",
-    "params": {
+    "tool": {
       "name": "search_database",
-      "arguments": {
-        "query": "enterprise customers",
-        "limit": 5
+      "description": "Search the enterprise database for records matching a query",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum results",
+            "default": 10
+          }
+        },
+        "required": ["query"]
       }
     }
   }'
 ```
 
-**Script:**
+**Presenter Script:**
 
-> Let me show an actual tool invocation. This is how an AI would call a tool through Context Forge.
+> "Let's register our first tool. This is the complete curl command being executed.
 >
-> The request uses JSON-RPC 2.0 format as specified by MCP. We specify the tool name and arguments.
+> Notice the structure:
+> - We POST to `/tools` with basic authentication
+> - The body is wrapped in a `tool` key
+> - The `inputSchema` uses JSON Schema to define what parameters the tool accepts
+> - The `query` parameter is required, while `limit` is optional with a default of 10
 >
-> [Execute command]
+> This schema is what AI clients will use to understand how to call this tool."
+
+**Tool 2: send_notification**
+
+**Presenter Script:**
+
+> "Our second tool demonstrates more advanced JSON Schema features.
 >
-> The response includes the result from the tool, plus metadata like execution time and request ID for tracing.
+> Notice:
+> - `recipients` is an **array** of strings - for multiple email addresses
+> - `priority` uses an **enum** to restrict values to 'low', 'normal', or 'high'
+>
+> The AI will see these constraints and know exactly what valid inputs look like."
+
+**Tool 3: generate_report**
+
+**Presenter Script:**
+
+> "The third tool shows a nested object type for complex data input.
+>
+> With all three tools registered, they're immediately available for discovery by any AI client connected to Context Forge."
 
 ---
 
-## Backup Commands
+## Part 2: Tool Discovery
 
-If demo environment has issues, use these to recover:
+**What Appears:**
 
 ```bash
-# Check if service is running
-curl http://localhost:4444/health
+curl -s "http://localhost:4444/tools" | jq '.[] | {name, description, enabled}'
+```
 
-# View logs
-docker logs mcp-context-forge
+Response:
+```json
+{
+  "name": "search-database",
+  "description": "Search the enterprise database for records matching a query",
+  "enabled": true
+}
+{
+  "name": "send-notification",
+  "description": "Send a notification to specified recipients",
+  "enabled": true
+}
+{
+  "name": "generate-report",
+  "description": "Generate a formatted report from provided data",
+  "enabled": true
+}
+```
 
-# Restart service
-docker restart mcp-context-forge
+**Presenter Script:**
 
-# Or for local development
-make dev
+> "Now let's see how AI clients discover these tools.
+>
+> When an AI connects to Context Forge, it queries the `/tools` endpoint. This returns all available tools with their metadata.
+>
+> The AI uses this information to:
+> 1. **Understand what tools exist** - from the name and description
+> 2. **Choose the right tool** - based on the task at hand
+> 3. **Construct valid requests** - using the inputSchema
+>
+> This is the foundation of the MCP protocol - dynamic, standardized tool discovery."
+
+---
+
+## Part 3: Tool Governance
+
+**Scenario Setup:**
+
+The script explains the scenario:
+- You discover a bug in the `send_notification` tool
+- Or you need to do maintenance
+- Or security requires temporarily disabling a capability
+
+**Disabling a Tool:**
+
+```bash
+curl -X POST "http://localhost:4444/tools/{tool_id}/state?activate=false" \
+  -u admin:changeme
+```
+
+**Presenter Script:**
+
+> "This is where centralized governance becomes powerful.
+>
+> Imagine we discover an issue with the send_notification tool. In a traditional setup, you'd need to:
+> - Update code in every AI application
+> - Deploy changes
+> - Coordinate across teams
+>
+> With Context Forge, it's one API call. Watch what happens..."
+
+**After Disabling - Verify:**
+
+```bash
+curl -s "http://localhost:4444/tools" | jq '.[] | .name'
+```
+
+Output:
+```
+"generate-report"
+"search-database"
+```
+
+**Presenter Script:**
+
+> "Notice that `send-notification` is no longer in the list.
+>
+> Any AI client that queries for tools right now will NOT see it. It's completely hidden from discovery.
+>
+> This is centralized governance in action:
+> - **One API call**
+> - **Immediate effect**
+> - **All AI clients affected**
+> - **No code changes required**"
+
+**Re-enabling:**
+
+```bash
+curl -X POST "http://localhost:4444/tools/{tool_id}/state?activate=true" \
+  -u admin:changeme
+```
+
+**Presenter Script:**
+
+> "Once the issue is resolved, re-enabling is just as easy. The tool is immediately visible again to all clients."
+
+---
+
+## Part 4: MCP Server & Gateway Registration
+
+**Architecture Layers Diagram:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    CONTEXT FORGE ARCHITECTURE LAYERS                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Layer 1: TOOLS (Individual capabilities)
+════════════════════════════════════════
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ search_db    │  │ send_notif   │  │ gen_report   │
+│ (REST Tool)  │  │ (REST Tool)  │  │ (REST Tool)  │
+└──────────────┘  └──────────────┘  └──────────────┘
+
+Layer 2: GATEWAYS (Federated MCP Servers)
+════════════════════════════════════════════
+┌─────────────────────────────────────────────────────────────────────┐
+│                      MCP CONTEXT FORGE (Primary)                    │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+            ┌───────────────────┼───────────────────┐
+            │                   │                   │
+            ▼                   ▼                   ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  Gateway A       │  │  Gateway B       │  │  Gateway C       │
+│  (US-East)       │  │  (EU-West)       │  │  (AP-South)      │
+│  - tool_a1       │  │  - tool_b1       │  │  - tool_c1       │
+│  - tool_a2       │  │  - tool_b2       │  │  - tool_c2       │
+└──────────────────┘  └──────────────────┘  └──────────────────┘
+
+Layer 3: VIRTUAL SERVERS (Composed tool sets)
+═══════════════════════════════════════════════
+┌──────────────────────────────────────────────────────────────────┐
+│  Virtual Server: "finance-tools"                                 │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐                  │
+│  │ tool_a1    │  │ tool_b2    │  │ tool_c1    │  (Cherry-picked) │
+│  └────────────┘  └────────────┘  └────────────┘                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Presenter Script:**
+
+> "So far we've registered individual tools. But Context Forge supports three layers of organization:
+>
+> **Layer 1: Tools** - Individual capabilities, like we just registered.
+>
+> **Layer 2: Gateways** - These are federated MCP servers. You can have Context Forge instances in different regions - US-East, EU-West, Asia-Pacific - each with their own tools. They can discover each other and aggregate tools into a unified catalog.
+>
+> **Layer 3: Virtual Servers** - These let you compose custom tool sets. For example:
+> - A 'finance-tools' server with only financial analysis tools
+> - An 'hr-tools' server with only HR-related tools
+> - A 'public-tools' server with safe tools for external users
+>
+> Each virtual server gets its own SSE endpoint, perfect for multi-tenant scenarios."
+
+**Gateway Registration Example:**
+
+```bash
+curl -X POST "http://localhost:4444/gateways" \
+  -u admin:changeme \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gateway": {
+      "name": "regional-us-east",
+      "url": "http://mcp-server-us-east:4445/sse",
+      "transport": "sse",
+      "description": "US East regional MCP server"
+    }
+  }'
+```
+
+**Virtual Server Example:**
+
+```bash
+curl -X POST "http://localhost:4444/servers" \
+  -u admin:changeme \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server": {
+      "name": "finance-analysis",
+      "description": "Financial analysis tools for analysts",
+      "tool_ids": ["tool_id_1", "tool_id_2", "tool_id_3"]
+    }
+  }'
 ```
 
 ---
 
-## Demo Environment Variables
+## Part 5: Admin UI & API Documentation
 
+**Admin UI Features Diagram:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         ADMIN UI FEATURES                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────┐  ┌────────────────┐  ┌────────────────┐  ┌────────────┐
+│   Dashboard    │  │    Tools       │  │   Gateways     │  │    Logs    │
+│                │  │                │  │                │  │            │
+│  • Statistics  │  │  • List/CRUD   │  │  • Federation  │  │  • Search  │
+│  • Health      │  │  • Enable/     │  │  • Health      │  │  • Filter  │
+│  • Activity    │  │    Disable     │  │  • Refresh     │  │  • Export  │
+└────────────────┘  └────────────────┘  └────────────────┘  └────────────┘
+```
+
+**Presenter Script:**
+
+> "Context Forge includes a web-based Admin UI for visual management.
+>
+> The **Dashboard** shows statistics, health status, and recent activity.
+>
+> The **Tools** section lets you list, create, update, and delete tools - plus enable or disable them with a single click.
+>
+> The **Gateways** section manages federation with other MCP servers.
+>
+> The **Logs** section provides searchable, filterable logs for troubleshooting.
+>
+> You can access these at:
+> - Admin UI: `http://localhost:4444/admin`
+> - API Docs: `http://localhost:4444/docs`"
+
+---
+
+## Summary
+
+The demo concludes with key takeaways:
+
+**1. TOOL REGISTRATION**
+- Register tools with name, description, and inputSchema
+- Tools become immediately discoverable by AI clients
+- JSON Schema defines parameter validation
+
+**2. TOOL DISCOVERY**
+- AI clients query `/tools` to discover available capabilities
+- Each tool includes schema for AI reasoning
+- Only enabled tools are returned (governance in action)
+
+**3. CENTRALIZED GOVERNANCE**
+- Enable/disable tools with a single API call
+- Changes are immediate - no deployments needed
+- Affects all AI clients simultaneously
+
+**4. FEDERATION & VIRTUAL SERVERS**
+- Register external MCP servers as gateways
+- Create virtual servers for custom tool compositions
+- Support multi-region, multi-tenant architectures
+
+**5. ADMIN UI & OBSERVABILITY**
+- Web-based management at `/admin`
+- Full API documentation at `/docs`
+- Metrics, logging, and tracing built-in
+
+---
+
+## Resources
+
+**Links displayed at end of demo:**
+
+- GitHub: https://github.com/IBM/mcp-context-forge
+- Documentation: https://ibm.github.io/mcp-context-forge
+- PyPI: `pip install mcp-contextforge-gateway`
+
+---
+
+## Troubleshooting
+
+### Server Won't Start
 ```bash
-# Development settings for demo
-export HOST=0.0.0.0
-export PORT=4444
-export DATABASE_URL=sqlite:///./demo.db
-export MCPGATEWAY_UI_ENABLED=true
-export AUTH_REQUIRED=false
-export LOG_LEVEL=INFO
-export RELOAD=false
+# Check port availability
+lsof -i :4444
+
+# Check Python environment
+python --version  # Should be 3.11+
+```
+
+### Demo Script Issues
+```bash
+# Set TERM if "clear" command fails
+export TERM=xterm
+bash demo.sh
+```
+
+### Database Issues
+```bash
+# Reset database
+rm -f mcp.db
+# Restart server
+```
+
+### API Returns 401
+```bash
+# Default credentials
+Username: admin
+Password: changeme
+
+# Or check .env file
+grep BASIC_AUTH .env
+```
+
+### jq Not Installed
+```bash
+# Ubuntu/Debian
+sudo apt-get install jq
+
+# macOS
+brew install jq
+
+# RHEL/CentOS
+sudo yum install jq
 ```
 
 ---
@@ -314,46 +525,11 @@ export RELOAD=false
 ## Post-Demo Cleanup
 
 ```bash
+# Stop the server (Ctrl+C in Terminal 1)
+
 # Remove demo database
-rm -f demo.db
-
-# Stop containers
-docker stop mcp-context-forge
-
-# Or for development
-# Ctrl+C in terminal running the server
-```
-
----
-
-## Troubleshooting
-
-### Service Won't Start
-```bash
-# Check port availability
-lsof -i :4444
-
-# Check Python environment
-which python
-python --version  # Should be 3.11+
-```
-
-### Database Issues
-```bash
-# Reset database
 rm -f mcp.db
-mcpgateway serve  # Will recreate
-```
 
-### UI Not Loading
-```bash
-# Verify UI is enabled
-curl http://localhost:4444/health | jq '.features.ui_enabled'
-```
-
-### API Returns 401
-```bash
-# Disable auth for demo if needed
-export AUTH_REQUIRED=false
-# Restart service
+# Or if using Docker
+docker stop mcp-context-forge
 ```
