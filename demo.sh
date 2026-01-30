@@ -28,11 +28,13 @@ AUTH_PASS="${BASIC_AUTH_PASSWORD:-changeme}"
 AUTH_HEADER="-u ${AUTH_USER}:${AUTH_PASS}"
 
 # Colors for output
+WHITE='\033[0;37m'      # normal white
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
+CYAN=$WHITE
 MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
@@ -86,7 +88,7 @@ print_code_block() {
 }
 
 print_diagram() {
-    echo -e "${BLUE}$1${NC}"
+    echo -e "${WHITE}$1${NC}"
 }
 
 wait_for_enter() {
