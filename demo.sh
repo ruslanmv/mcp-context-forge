@@ -80,11 +80,11 @@ print_story() {
 }
 
 print_code_block() {
-    echo -e "${DIM}┌──────────────────────────────────────────────────────────────────────────────┐${NC}"
+    printf '%b┌──────────────────────────────────────────────────────────────────────────────┐%b\n' "${DIM}" "${NC}"
     echo "$1" | while IFS= read -r line; do
-        echo -e "${DIM}│${NC} ${CYAN}$line${NC}"
+        printf '%b│%b %b%s%b\n' "${DIM}" "${NC}" "${CYAN}" "$line" "${NC}"
     done
-    echo -e "${DIM}└──────────────────────────────────────────────────────────────────────────────┘${NC}"
+    printf '%b└──────────────────────────────────────────────────────────────────────────────┘%b\n' "${DIM}" "${NC}"
 }
 
 print_diagram() {
@@ -227,10 +227,11 @@ The inputSchema defines two parameters:
     print_step "Executing the following curl command:"
     echo ""
 
-    print_code_block 'curl -X POST "http://localhost:4444/tools" \
+    print_code_block "$(cat <<'ENDOFBLOCK'
+curl -X POST "http://localhost:4444/tools" \
   -u admin:changeme \
   -H "Content-Type: application/json" \
-  -d '"'"'{
+  -d '{
     "tool": {
       "name": "search_database",
       "description": "Search the enterprise database for records matching a query",
@@ -250,7 +251,9 @@ The inputSchema defines two parameters:
         "required": ["query"]
       }
     }
-  }'"'"''
+  }'
+ENDOFBLOCK
+)"
 
     echo ""
     print_info "Sending request..."
@@ -299,10 +302,11 @@ The inputSchema uses advanced JSON Schema features:
     print_step "Executing the following curl command:"
     echo ""
 
-    print_code_block 'curl -X POST "http://localhost:4444/tools" \
+    print_code_block "$(cat <<'ENDOFBLOCK'
+curl -X POST "http://localhost:4444/tools" \
   -u admin:changeme \
   -H "Content-Type: application/json" \
-  -d '"'"'{
+  -d '{
     "tool": {
       "name": "send_notification",
       "description": "Send a notification to specified recipients",
@@ -327,7 +331,9 @@ The inputSchema uses advanced JSON Schema features:
         "required": ["recipients", "message"]
       }
     }
-  }'"'"''
+  }'
+ENDOFBLOCK
+)"
 
     echo ""
     print_info "Sending request..."
@@ -377,10 +383,11 @@ It demonstrates:
     print_step "Executing the following curl command:"
     echo ""
 
-    print_code_block 'curl -X POST "http://localhost:4444/tools" \
+    print_code_block "$(cat <<'ENDOFBLOCK'
+curl -X POST "http://localhost:4444/tools" \
   -u admin:changeme \
   -H "Content-Type: application/json" \
-  -d '"'"'{
+  -d '{
     "tool": {
       "name": "generate_report",
       "description": "Generate a formatted report from provided data",
@@ -404,7 +411,9 @@ It demonstrates:
         "required": ["title", "data"]
       }
     }
-  }'"'"''
+  }'
+ENDOFBLOCK
+)"
 
     echo ""
     print_info "Sending request..."
@@ -463,7 +472,7 @@ The response includes everything the AI needs:
 
     print_step "Listing all available tools..."
     echo ""
-    print_code_block 'curl -s "http://localhost:4444/tools" | jq '"'"'.[] | {name, description, enabled}'"'"''
+    print_code_block 'curl -s "http://localhost:4444/tools" -u admin:changeme | jq ".[] | {name, description, enabled}"'
     echo ""
 
     print_info "Response:"
@@ -545,7 +554,7 @@ The 'send-notification' tool should no longer appear in the list."
     print_step "Listing active tools:"
     echo ""
 
-    print_code_block 'curl -s "http://localhost:4444/tools" | jq '"'"'.[] | .name'"'"''
+    print_code_block 'curl -s "http://localhost:4444/tools" -u admin:changeme | jq ".[] | .name"'
 
     echo ""
     local active_tools=$(curl -s ${AUTH_HEADER} "${BASE_URL}/tools")
@@ -654,22 +663,28 @@ Context Forge will then aggregate its tools into our unified catalog."
     print_step "Example: Register a peer gateway"
     echo ""
 
-    print_code_block 'curl -X POST "http://localhost:4444/gateways" \
+    print_code_block "$(cat <<'ENDOFBLOCK'
+curl -X POST "http://localhost:4444/gateways" \
   -u admin:changeme \
   -H "Content-Type: application/json" \
-  -d '"'"'{
+  -d '{
     "gateway": {
       "name": "regional-us-east",
       "url": "http://mcp-server-us-east:4445/sse",
       "transport": "sse",
       "description": "US East regional MCP server"
     }
-  }'"'"''
+  }'
+ENDOFBLOCK
+)"
 
     print_story "After registration, you can refresh the gateway to pull its tools:"
 
-    print_code_block 'curl -X POST "http://localhost:4444/gateways/{gateway_id}/refresh" \
-  -u admin:changeme'
+    print_code_block "$(cat <<'ENDOFBLOCK'
+curl -X POST "http://localhost:4444/gateways/{gateway_id}/refresh" \
+  -u admin:changeme
+ENDOFBLOCK
+)"
 
     wait_for_enter
 
@@ -688,16 +703,19 @@ Each virtual server can include tools from multiple gateways."
     print_step "Example: Create a virtual server"
     echo ""
 
-    print_code_block 'curl -X POST "http://localhost:4444/servers" \
+    print_code_block "$(cat <<'ENDOFBLOCK'
+curl -X POST "http://localhost:4444/servers" \
   -u admin:changeme \
   -H "Content-Type: application/json" \
-  -d '"'"'{
+  -d '{
     "server": {
       "name": "finance-analysis",
       "description": "Financial analysis tools for analysts",
       "tool_ids": ["tool_id_1", "tool_id_2", "tool_id_3"]
     }
-  }'"'"''
+  }'
+ENDOFBLOCK
+)"
 
     print_story "Virtual servers get their own SSE endpoint:
 
