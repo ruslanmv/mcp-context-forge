@@ -827,6 +827,25 @@ catalog_servers:
     requires_api_key: false
     tags: ["prediction-markets", "forecasting", "betting"]
 
+  # News & Current Affairs
+  - id: hp-news
+    name: "HomePilot News"
+    category: "News"
+    url: "http://localhost:8787/health"
+    auth_type: "Open"
+    provider: "HomePilotAI"
+    description: "Real-time news aggregator using free sources (RSS, Google News RSS, GDELT) with MCP stdio and HTTP interfaces"
+    requires_api_key: false
+    tags: ["news", "headlines", "rss", "current-affairs", "homepilot"]
+    source:
+      git: "https://github.com/HomePilotAI/hp-news"
+      ref: "main"
+    tools:
+      - "news.top"
+      - "news.search"
+      - "news.sources"
+      - "news.health"
+
   # Local Development Servers
   - id: fast-time-server
     name: "Fast Time Server"
@@ -870,6 +889,7 @@ categories:
   - Advertising
   - Link Shortener
   - Airlines
+  - News
   - Other
   - MCP Directory
   - Service Discovery
