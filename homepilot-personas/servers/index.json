@@ -1,0 +1,18 @@
+{
+  "schema": "mcp-context-forge.bundle/v1",
+  "description": "HomePilot Viral Persona Pack — 10 production MCP servers ready to import into MCP Context Forge.",
+  "generated_at": "2026-04-25T00:01:52Z",
+  "bundle": "homepilot-personas",
+  "servers": [
+    { "id": "mcp-creator-muse", "file": "homepilot-personas/servers/mcp-creator-muse.json" },
+    { "id": "mcp-style-muse", "file": "homepilot-personas/servers/mcp-style-muse.json" },
+    { "id": "mcp-secretary-pro", "file": "homepilot-personas/servers/mcp-secretary-pro.json" },
+    { "id": "mcp-researcher", "file": "homepilot-personas/servers/mcp-researcher.json" },
+    { "id": "mcp-personal-trainer", "file": "homepilot-personas/servers/mcp-personal-trainer.json" },
+    { "id": "mcp-room-stylist", "file": "homepilot-personas/servers/mcp-room-stylist.json" },
+    { "id": "mcp-storyteller", "file": "homepilot-personas/servers/mcp-storyteller.json" },
+    { "id": "mcp-exam-coach", "file": "homepilot-personas/servers/mcp-exam-coach.json" },
+    { "id": "mcp-mindfulness-coach", "file": "homepilot-personas/servers/mcp-mindfulness-coach.json" },
+    { "id": "mcp-general-doctor", "file": "homepilot-personas/servers/mcp-general-doctor.json" }
+  ]
+}

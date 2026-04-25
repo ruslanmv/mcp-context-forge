@@ -1,0 +1,30 @@
+{
+  "id": "mcp-storyteller",
+  "name": "mcp-storyteller",
+  "description": "A bedtime-story persona that crafts illustrated tales tailored to a child or family, builds storyboards and exports printable PDFs or scene scripts for HomePilot Play Story.",
+  "persona_id": "storyteller",
+  "persona_name": "Storyteller",
+  "protocol": "MCP",
+  "transport": "HTTP",
+  "url": "http://localhost:9107",
+  "default_port": 9107,
+  "endpoints": {
+    "health": "/health",
+    "tools": "/tools",
+    "invoke": "/mcp/call"
+  },
+  "tools": [
+    "story.outline",
+    "story.scene_pack",
+    "story.illustration_prompts",
+    "story.printable_pdf_layout",
+    "story.bedtime_pacing"
+  ],
+  "repo": "https://github.com/HomePilotAI/personas",
+  "path": "mcp-servers/07-mcp-storyteller",
+  "docker": {
+    "image": "homepilot/personas:latest",
+    "command": "node mcp-servers/07-mcp-storyteller/src/index.js",
+    "port": 9107
+  }
+}
